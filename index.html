@@ -1,53 +1,200 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tebak Emoji</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            animation: {
-              'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
-              'pop': 'pop 0.3s ease-out forwards',
-            },
-            keyframes: {
-              shake: {
-                '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-                '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-                '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-                '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
-              },
-              pop: {
-                '0%': { transform: 'scale(0.8)', opacity: '0' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
-              }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'pop': 'pop 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     </script>
+
     <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f8fafc;
-        touch-action: manipulation; /* Improves touch response */
-      }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f9ff; /* Biru muda langit */
+            touch-action: manipulation;
+        }
+        .emoji-btn {
+            transition: all 0.2s;
+        }
+        .emoji-btn:active {
+            transform: scale(0.95);
+        }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
-  }
-}
-</script>
 </head>
-  <body>
+<body>
     <div id="root"></div>
-  </body>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Data Soal
+        const questions = [
+            { phrase: "Nonton Film Horor", correct: "🍿😱👻", options: ["🍿😱👻", "🏖️☀️🍦", "🚲🌳📖", "🍕🎸🎮"] },
+            { phrase: "Macet Total", correct: "🚗😤🛑", options: ["🚗😤🛑", "✈️🌴🍹", "🛌💤🌙", "🏋️‍♂️💦💪"] },
+            { phrase: "Ulang Tahun", correct: "🎂🎈🎁", options: ["🎂🎈🎁", "🌧️☔🏠", "🐶🦴🎾", "💼👔💻"] },
+            { phrase: "Jatuh Cinta", correct: "🥰💌🌹", options: ["🥰💌🌹", "🤬🔥👊", "🥶❄️☃️", "🤢🤮💊"] },
+            { phrase: "Belajar Coding", correct: "💻☕🐛", options: ["💻☕🐛", "⚽🥅🏆", "🎤🎵🎹", "🍔🍟🥤"] },
+            { phrase: "Liburan ke Pantai", correct: "🌊👙🥥", options: ["🌊👙🥥", "🏔️🧥⛷️", "🏫📚✏️", "🚑🏥💉"] },
+            { phrase: "Gajian", correct: "💰🤑💳", options: ["💰🤑💳", "🏚️👻🕸️", "🌵☀️🐫", "🚜🌾🌽"] },
+            { phrase: "Sakit Gigi", correct: "🦷🤕💊", options: ["🦷🤕💊", "💇‍♀️💄💅", "🚴‍♂️🌲🏞️", "👶🍼🧸"] },
+            { phrase: "Lapar Tengah Malam", correct: "🌙🤤🍜", options: ["🌙🤤🍜", "☀️🕶️🧢", "🛁🧼🚿", "🎨🖌️🖼️"] },
+            { phrase: "Menang Lotre", correct: "🎉💵🏦", options: ["🎉💵🏦", "📉💔😭", "🧹🗑️🧽", "🔌🔋💡"] }
+        ];
+
+        function App() {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [status, setStatus] = useState("playing"); // playing, correct, wrong, finished
+            const [shaked, setShaked] = useState(false);
+
+            const handleAnswer = (option) => {
+                if (status !== "playing") return;
+
+                if (option === questions[currentQ].correct) {
+                    setStatus("correct");
+                    setScore(score + 10);
+                } else {
+                    setStatus("wrong");
+                    setShaked(true);
+                    setTimeout(() => setShaked(false), 500);
+                }
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < questions.length - 1) {
+                    setCurrentQ(currentQ + 1);
+                    setStatus("playing");
+                } else {
+                    setStatus("finished");
+                }
+            };
+
+            const resetGame = () => {
+                setCurrentQ(0);
+                setScore(0);
+                setStatus("playing");
+            };
+
+            if (status === "finished") {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center animate-pop">
+                        <div className="text-6xl mb-4">🏆</div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">Selesai!</h1>
+                        <p className="text-xl text-slate-600 mb-8">Skor Kamu: <span className="font-bold text-blue-600">{score}</span></p>
+                        <button 
+                            onClick={resetGame}
+                            className="bg-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-600 active:scale-95 transition"
+                        >
+                            Main Lagi
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen max-w-md mx-auto bg-white shadow-2xl overflow-hidden flex flex-col relative">
+                    {/* Header */}
+                    <div className="bg-blue-500 p-4 flex justify-between items-center text-white shadow-md z-10">
+                        <div className="font-bold">Level {currentQ + 1}/{questions.length}</div>
+                        <div className="bg-blue-700 px-3 py-1 rounded-full text-sm">Skor: {score}</div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+                        
+                        {/* Pertanyaan */}
+                        <div className="text-center mb-8">
+                            <p className="text-slate-400 text-sm uppercase tracking-wider mb-2 font-semibold">Tebak Emoji Untuk:</p>
+                            <h2 className="text-3xl font-black text-slate-800 leading-tight">
+                                "{questions[currentQ].phrase}"
+                            </h2>
+                        </div>
+
+                        {/* Pilihan Jawaban */}
+                        <div className={`grid grid-cols-2 gap-4 w-full ${shaked ? 'animate-shake' : ''}`}>
+                            {questions[currentQ].options.map((opt, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleAnswer(opt)}
+                                    disabled={status !== "playing"}
+                                    className={`
+                                        h-24 text-4xl rounded-2xl shadow-sm border-b-4 transition-all emoji-btn
+                                        ${status === "playing" 
+                                            ? "bg-slate-50 border-slate-200 hover:bg-blue-50 hover:border-blue-200" 
+                                            : opt === questions[currentQ].correct 
+                                                ? "bg-green-100 border-green-400 ring-2 ring-green-400" 
+                                                : status === "wrong" && "bg-red-50 border-red-100 opacity-50"
+                                        }
+                                    `}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Feedback Modal / Overlay */}
+                    {(status === "correct" || status === "wrong") && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-10 bg-black/5 animate-pop backdrop-blur-[2px]">
+                            <div className={`
+                                w-11/12 p-6 rounded-3xl shadow-2xl text-center mb-4 border-t-4
+                                ${status === "correct" ? "bg-white border-green-500" : "bg-white border-red-500"}
+                            `}>
+                                <div className="text-5xl mb-2">
+                                    {status === "correct" ? "✅" : "❌"}
+                                </div>
+                                <h3 className={`text-2xl font-bold mb-4 ${status === "correct" ? "text-green-600" : "text-red-600"}`}>
+                                    {status === "correct" ? "Benar!" : "Salah!"}
+                                </h3>
+                                <button 
+                                    onClick={nextQuestion}
+                                    className={`
+                                        w-full py-3 rounded-xl font-bold text-white shadow-lg
+                                        ${status === "correct" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
+                                    `}
+                                >
+                                    Lanjut &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Render Aplikasi
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
