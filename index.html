@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tebak Emoji</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,6 +19,7 @@
                     animation: {
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                         'pop': 'pop 0.3s ease-out forwards',
+                        'float': 'float 3s ease-in-out infinite',
                     },
                     keyframes: {
                         shake: {
@@ -30,6 +31,10 @@
                         pop: {
                             '0%': { transform: 'scale(0.8)', opacity: '0' },
                             '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
                         }
                     }
                 }
@@ -40,15 +45,11 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f9ff; /* Biru muda langit */
-            touch-action: manipulation;
+            background-color: #f8fafc;
+            touch-action: manipulation; /* Mencegah zoom saat tap cepat */
         }
-        .emoji-btn {
-            transition: all 0.2s;
-        }
-        .emoji-btn:active {
-            transform: scale(0.95);
-        }
+        .emoji-btn { transition: all 0.2s; }
+        .emoji-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -57,7 +58,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Data Soal
         const questions = [
             { phrase: "Nonton Film Horor", correct: "🍿😱👻", options: ["🍿😱👻", "🏖️☀️🍦", "🚲🌳📖", "🍕🎸🎮"] },
             { phrase: "Macet Total", correct: "🚗😤🛑", options: ["🚗😤🛑", "✈️🌴🍹", "🛌💤🌙", "🏋️‍♂️💦💪"] },
@@ -72,10 +72,15 @@
         ];
 
         function App() {
+            // State "start" ditambahkan agar mulai dari Home Screen
+            const [status, setStatus] = useState("start"); 
             const [currentQ, setCurrentQ] = useState(0);
             const [score, setScore] = useState(0);
-            const [status, setStatus] = useState("playing"); // playing, correct, wrong, finished
             const [shaked, setShaked] = useState(false);
+
+            const startGame = () => {
+                setStatus("playing");
+            };
 
             const handleAnswer = (option) => {
                 if (status !== "playing") return;
@@ -102,39 +107,72 @@
             const resetGame = () => {
                 setCurrentQ(0);
                 setScore(0);
-                setStatus("playing");
+                setStatus("start"); // Kembali ke menu awal saat reset
             };
 
+            // --- HALAMAN 1: START SCREEN (HOME) ---
+            if (status === "start") {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-900 text-white animate-pop">
+                        <div className="text-8xl mb-6 animate-float">🤔</div>
+                        <h1 className="text-4xl font-black mb-2">
+                            Tebak <span className="text-blue-400">Emoji</span>
+                        </h1>
+                        <p className="text-slate-400 mb-12 text-center">
+                            Seberapa jago kamu menerjemahkan emoji?
+                        </p>
+
+                        <div className="w-full max-w-xs space-y-4">
+                            <button 
+                                onClick={startGame}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-900/50 transition transform active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                ▶ Mulai Main
+                            </button>
+                            
+                            <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                <span className="text-slate-400 text-sm">Skor Tertinggi: </span>
+                                <span className="font-bold text-yellow-400">{score > 0 ? score : "-"}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-12 text-xs text-slate-600">v1.0.0 • Mobile Edition</div>
+                    </div>
+                );
+            }
+
+            // --- HALAMAN 4: SELESAI ---
             if (status === "finished") {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center animate-pop">
-                        <div className="text-6xl mb-4">🏆</div>
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center animate-pop bg-white">
+                        <div className="text-8xl mb-4">🏆</div>
                         <h1 className="text-3xl font-bold text-slate-800 mb-2">Selesai!</h1>
-                        <p className="text-xl text-slate-600 mb-8">Skor Kamu: <span className="font-bold text-blue-600">{score}</span></p>
+                        <p className="text-xl text-slate-600 mb-8">Skor Kamu: <span className="font-bold text-blue-600 text-2xl">{score}</span></p>
                         <button 
                             onClick={resetGame}
                             className="bg-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-600 active:scale-95 transition"
                         >
-                            Main Lagi
+                            Ke Menu Utama
                         </button>
                     </div>
                 );
             }
 
+            // --- HALAMAN 2 & 3: GAMEPLAY ---
             return (
                 <div className="min-h-screen max-w-md mx-auto bg-white shadow-2xl overflow-hidden flex flex-col relative">
                     {/* Header */}
-                    <div className="bg-blue-500 p-4 flex justify-between items-center text-white shadow-md z-10">
-                        <div className="font-bold">Level {currentQ + 1}/{questions.length}</div>
-                        <div className="bg-blue-700 px-3 py-1 rounded-full text-sm">Skor: {score}</div>
+                    <div className="bg-blue-600 p-4 flex justify-between items-center text-white shadow-md z-10">
+                        <div className="font-bold opacity-90">Level {currentQ + 1}/{questions.length}</div>
+                        <div className="bg-blue-800/50 px-3 py-1 rounded-full text-sm font-mono">Skor: {score}</div>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 relative bg-slate-50">
                         
                         {/* Pertanyaan */}
-                        <div className="text-center mb-8">
-                            <p className="text-slate-400 text-sm uppercase tracking-wider mb-2 font-semibold">Tebak Emoji Untuk:</p>
+                        <div className="text-center mb-10">
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Tebak Emoji Untuk:</p>
                             <h2 className="text-3xl font-black text-slate-800 leading-tight">
                                 "{questions[currentQ].phrase}"
                             </h2>
@@ -148,9 +186,9 @@
                                     onClick={() => handleAnswer(opt)}
                                     disabled={status !== "playing"}
                                     className={`
-                                        h-24 text-4xl rounded-2xl shadow-sm border-b-4 transition-all emoji-btn
+                                        h-24 text-4xl rounded-2xl shadow-sm border-b-[6px] transition-all emoji-btn flex items-center justify-center
                                         ${status === "playing" 
-                                            ? "bg-slate-50 border-slate-200 hover:bg-blue-50 hover:border-blue-200" 
+                                            ? "bg-white border-slate-200 hover:border-blue-300 active:border-b-0 active:translate-y-[6px]" 
                                             : opt === questions[currentQ].correct 
                                                 ? "bg-green-100 border-green-400 ring-2 ring-green-400" 
                                                 : status === "wrong" && "bg-red-50 border-red-100 opacity-50"
@@ -165,25 +203,25 @@
 
                     {/* Feedback Modal / Overlay */}
                     {(status === "correct" || status === "wrong") && (
-                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-10 bg-black/5 animate-pop backdrop-blur-[2px]">
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-10 bg-black/20 animate-pop backdrop-blur-sm">
                             <div className={`
-                                w-11/12 p-6 rounded-3xl shadow-2xl text-center mb-4 border-t-4
+                                w-11/12 p-6 rounded-3xl shadow-2xl text-center mb-4 border-t-8
                                 ${status === "correct" ? "bg-white border-green-500" : "bg-white border-red-500"}
                             `}>
-                                <div className="text-5xl mb-2">
+                                <div className="text-6xl mb-2">
                                     {status === "correct" ? "✅" : "❌"}
                                 </div>
-                                <h3 className={`text-2xl font-bold mb-4 ${status === "correct" ? "text-green-600" : "text-red-600"}`}>
-                                    {status === "correct" ? "Benar!" : "Salah!"}
+                                <h3 className={`text-2xl font-bold mb-6 ${status === "correct" ? "text-green-600" : "text-red-600"}`}>
+                                    {status === "correct" ? "Jawaban Benar!" : "Yah, Salah!"}
                                 </h3>
                                 <button 
                                     onClick={nextQuestion}
                                     className={`
-                                        w-full py-3 rounded-xl font-bold text-white shadow-lg
+                                        w-full py-4 rounded-xl font-bold text-white text-lg shadow-lg active:scale-95 transition
                                         ${status === "correct" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
                                     `}
                                 >
-                                    Lanjut &rarr;
+                                    Lanjut
                                 </button>
                             </div>
                         </div>
@@ -192,7 +230,6 @@
             );
         }
 
-        // Render Aplikasi
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
